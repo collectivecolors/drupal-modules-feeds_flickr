@@ -1,0 +1,64 @@
+<?php
+// $Id: feeds_flickr.module,v 1.1 2010/05/08 04:05:21 dragonwize Exp $
+/**
+ * @file
+ * Adds a Flickr feed processor to the Feeds module.
+ */
+
+/**
+ * Implementation of hook_feeds_plugins().
+ */
+function feeds_flickr_feeds_plugins() {
+  $info = array();
+  if (feeds_library_exists('simplepie.inc', 'simplepie')) {
+    $info['FeedsFlickrParser'] = array(
+      'name' => 'Flickr parser',
+      'description' => 'Parse Flickr feeds.',
+      'help' => 'Use <a href="http://simplepie.org">SimplePie</a> to parse Flickr feeds.',
+      'handler' => array(
+        'parent' => 'FeedsSimplePieParser',
+        'class' => 'FeedsFlickrParser',
+        'file' => 'FeedsFlickrParser.inc',
+        'path' => drupal_get_path('module', 'feeds_flickr'),
+      ),
+    );
+    $info['FeedsFlickrPublicPhotoFetcher'] = array(
+      'name' => 'Flickr public photo search',
+      'description' => 'Download public photos from Flickr based on user ids and/or tags.',
+      'handler' => array(
+        'parent' => 'FeedsHTTPFetcher', // This is the key name, not the class name.
+        'class' => 'FeedsFlickrPublicPhotoFetcher',
+        'file' => 'FeedsFlickrPublicPhotoFetcher.inc',
+        'path' => drupal_get_path('module', 'feeds_flickr'),
+      ),
+    );
+  }
+  return $info;
+}
+
+/**
+ * Includes a library file.
+ * 
+ * @param $file
+ *   The filename to load from.
+ * @param $library
+ *   The name of the library.
+ */
+function _feeds_flickr_include_library($file, $library) {
+  static $included = array();
+  if (!isset($included[$file])) {
+    // Only support libraries.
+    if (module_exists('libraries') && file_exists(libraries_get_path($library) ."/$file")) {
+      require libraries_get_path($library) ."/$file";      
+      $included[$file] = TRUE;
+    }
+  }
+  return ($included[$file] ? TRUE : FALSE);
+}
+
+/**
+ * Inlcude the phpFlickr library for interfacing with the Flickr API.
+ */
+function _feeds_flickr_include_phpflickr() {
+  return _feeds_flickr_include_library('phpFlickr.php', 'phpflickr');
+}
